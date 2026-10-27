@@ -5,6 +5,16 @@ from google import genai
 from google.genai import types
 
 class handler(BaseHTTPRequestHandler):
+    def send_json(self, status_code, data):
+        self.send_response(status_code)
+        self.send_header('Content-Type', 'application/json; charset=utf-8')
+        self.end_headers()
+        payload = json.dumps(data, ensure_ascii=False).encode('utf-8')
+        self.wfile.write(payload)
+
+    def do_GET(self):
+        self.send_json(200, {"status": "API de pl(ai)lister activa"})
+
     def do_POST(self):
         try:
             content_length = int(self.headers.get('Content-Length', 0))
@@ -18,10 +28,7 @@ class handler(BaseHTTPRequestHandler):
 
             api_key = os.environ.get("GEMINI_API_KEY")
             if not api_key:
-                self.send_response(500)
-                self.send_header('Content-type', 'application/json')
-                self.end_headers()
-                self.wfile.write(json.dumps({"error": "Falta GEMINI_API_KEY en las variables de entorno de Vercel"}).encode())
+                self.send_json(500, {"error": "Falta GEMINI_API_KEY en las variables de entorno de Vercel"})
                 return
 
             client = genai.Client(api_key=api_key)
@@ -42,13 +49,9 @@ No inventes canciones. Evita duplicados. Sin markdown extra.
                 ),
             )
 
-            self.send_response(200)
-            self.send_header('Content-type', 'application/json')
-            self.end_headers()
-            self.wfile.write(response.text.encode('utf-8'))
+            # Validar e interpretar la respuesta JSON de Gemini antes de enviar
+            result_json = json.loads(response.text)
+            self.send_json(200, result_json)
 
         except Exception as e:
-            self.send_response(500)
-            self.send_header('Content-type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps({"error": str(e)}).encode())
+            self.send_json(500, {"error": str(e)})
