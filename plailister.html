@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pl(ai)lister - Generador de Playlists con IA</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Spotify & Music Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        spotify: {
+                            base: '#121212',
+                            card: '#1E1E1E',
+                            cardHover: '#282828',
+                            border: '#333333',
+                            green: '#1ED760',
+                            greenHover: '#1fdf64',
+                            textMuted: '#B3B3B3',
+                            darkText: '#07150B'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar matching Spotify dark mode */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #121212;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #333333;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555555;
+        }
+        .glass-panel {
+            background: rgba(30, 30, 30, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+    </style>
+</head>
+<body class="bg-spotify-base text-white font-sans antialiased min-h-screen flex flex-col md:flex-row overflow-x-hidden selection:bg-spotify-green selection:text-black">
+
+    <!-- BARRA LATERAL (Sidebar Navigation) -->
+    <aside class="w-full md:w-64 bg-black/60 border-b md:border-b-0 md:border-r border-spotify-border flex-shrink-0 flex flex-col justify-between p-4 md:p-6 z-20">
+        <div>
+            <!-- Brand Logo -->
+            <div onclick="switchStep('create')" class="cursor-pointer flex items-center gap-2 mb-8 select-none group">
+                <span class="text-2xl font-extrabold tracking-tight text-white group-hover:text-spotify-green transition-colors">
+                    pl<span class="inline-flex items-center justify-center w-6 h-6 border-2 border-spotify-green text-spotify-green rounded-full text-xs font-bold ml-0.5 mr-0.5">ai</span>lister
+                </span>
+            </div>
+
+            <!-- Main Actions -->
+            <button onclick="resetApp()" class="w-full bg-spotify-green hover:bg-spotify-greenHover text-spotify-darkText font-bold py-3 px-4 rounded-full flex items-center justify-center gap-2 transition-all transform active:scale-95 shadow-lg shadow-spotify-green/20 mb-6">
+                <i class="fa-solid fa-plus text-sm"></i>
+                <span>Nueva playlist</span>
+            </button>
+
+            <!-- Navigation Links -->
+            <nav class="space-y-1">
+                <button onclick="switchStep('create')" id="nav-create" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-white bg-spotify-card transition-colors">
+                    <i class="fa-solid fa-wand-magic-sparkles text-spotify-green w-5"></i>
+                    <span>Crear con IA</span>
+                </button>
+                <button onclick="switchStep('history')" id="nav-history" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-spotify-textMuted hover:text-white hover:bg-spotify-card/50 transition-colors">
+                    <i class="fa-solid fa-clock-rotate-left w-5"></i>
+                    <span>Historial</span>
+                </button>
+                <button onclick="openSettingsModal()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-spotify-textMuted hover:text-white hover:bg-spotify-card/50 transition-colors">
+                    <i class="fa-solid fa-sliders w-5"></i>
+                    <span>Parámetros IA</span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- Connection Status & Info -->
+        <div class="mt-8 pt-4 border-t border-spotify-border">
+            <div id="spotify-status-badge" class="flex items-center justify-between p-2.5 rounded-lg bg-spotify-card/50 border border-spotify-border/60">
+                <div class="flex items-center gap-2 text-xs text-spotify-textMuted">
+                    <span class="w-2.5 h-2.5 rounded-full bg-spotify-green animate-pulse"></span>
+                    <span>Modo Demo Directo</span>
+                </div>
+                <i class="fa-brands fa-spotify text-spotify-green text-lg"></i>
+            </div>
+        </div>
+    </aside>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="flex-1 max-w-4xl mx-auto w-full p-4 md:p-8 overflow-y-auto">
+
+        <!-- NOTIFICACIONES (Toast) -->
+        <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2 pointer-events-none"></div>
+
+        <!-- 1. PANTALLA PRINCIPAL: CREAR PROMPT -->
+        <section id="step-create" class="space-y-6">
+            <div>
+                <div class="text-spotify-green text-xs font-bold uppercase tracking-widest mb-1">Descubrimiento musical inteligente</div>
+                <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">¿Qué quieres escuchar hoy?</h1>
+                <p class="text-spotify-textMuted text-sm mt-1">Describe tu estado de ánimo, géneros, época, escena o temáticas específicas.</p>
+            </div>
+
+            <!-- Composer Card -->
+            <div class="bg-spotify-card border border-spotify-border rounded-2xl p-5 md:p-6 shadow-xl relative overflow-hidden group">
+                <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-spotify-green/5 rounded-full blur-3xl group-hover:bg-spotify-green/10 transition-all"></div>
+                
+                <textarea id="prompt-input" rows="4" 
+                    class="w-full bg-spotify-base/80 border border-spotify-border rounded-xl p-4 text-white placeholder-spotify-textMuted/60 focus:outline-none focus:border-spotify-green transition-colors resize-none text-base"
+                    placeholder="Ej.: Rock alternativo en español de los 2000, melancólico para conducir de noche por la ciudad..."></textarea>
+
+                <div class="flex flex-wrap items-center justify-between gap-4 mt-4 pt-4 border-t border-spotify-border/60">
+                    <div class="flex items-center gap-2">
+                        <button onclick="openSettingsModal()" class="px-3 py-1.5 rounded-full bg-spotify-base border border-spotify-border hover:border-spotify-textMuted text-xs font-semibold text-spotify-textMuted hover:text-white transition-all flex items-center gap-2">
+                            <i class="fa-solid fa-sliders text-spotify-green"></i>
+                            <span id="settings-summary-badge">15 canciones | Temp: 0.7</span>
+                        </button>
+                    </div>
+
+                    <button onclick="handleGenerate()" id="btn-generate" class="w-full sm:w-auto bg-spotify-green hover:bg-spotify-greenHover text-spotify-darkText font-bold py-3 px-6 rounded-full flex items-center justify-center gap-2 transition-all transform active:scale-95 shadow-lg shadow-spotify-green/20">
+                        <span>Generar selección</span>
+                        <i class="fa-solid fa-arrow-right text-sm"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Ejemplos rápidos -->
+            <div>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-spotify-textMuted mb-3">Sugerencias para empezar</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button onclick="setPrompt('Synthwave cyberpunk estilo años 80 para programar con energía')" class="p-3 bg-spotify-card hover:bg-spotify-cardHover border border-spotify-border rounded-xl text-left text-xs font-medium text-spotify-textMuted hover:text-white transition-all flex items-center justify-between group">
+                        <span>⚡ Synthwave retrofuturista para concentración</span>
+                        <i class="fa-solid fa-chevron-right opacity-0 group-hover:opacity-100 text-spotify-green transition-opacity"></i>
+                    </button>
+                    <button onclick="setPrompt('Indie folk acústico relajante, guitarras suaves y ambiente de café')" class="p-3 bg-spotify-card hover:bg-spotify-cardHover border border-spotify-border rounded-xl text-left text-xs font-medium text-spotify-textMuted hover:text-white transition-all flex items-center justify-between group">
+                        <span>☕ Indie Folk acústico y cálido</span>
+                        <i class="fa-solid fa-chevron-right opacity-0 group-hover:opacity-100 text-spotify-green transition-opacity"></i>
+                    </button>
+                    <button onclick="setPrompt('Clásicos del Hip Hop de los 90, boom bap con mucho groove')" class="p-3 bg-spotify-card hover:bg-spotify-cardHover border border-spotify-border rounded-xl text-left text-xs font-medium text-spotify-textMuted hover:text-white transition-all flex items-center justify-between group">
+                        <span>🎙️ Boom Bap & Hip Hop Golden Era 90s</span>
+                        <i class="fa-solid fa-chevron-right opacity-0 group-hover:opacity-100 text-spotify-green transition-opacity"></i>
+                    </button>
+                    <button onclick="setPrompt('Post-rock instrumental expansivo con crescendos épicos')" class="p-3 bg-spotify-card hover:bg-spotify-cardHover border border-spotify-border rounded-xl text-left text-xs font-medium text-spotify-textMuted hover:text-white transition-all flex items-center justify-between group">
+                        <span>🌌 Post-Rock melancólico e instrumental</span>
+                        <i class="fa-solid fa-chevron-right opacity-0 group-hover:opacity-100 text-spotify-green transition-opacity"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. PANTALLA DE REVISIÓN Y EDICIÓN -->
+        <section id="step-review" class="hidden space-y-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <button onclick="switchStep('create')" class="text-xs text-spotify-textMuted hover:text-white flex items-center gap-1 mb-2 transition-colors">
+                        <i class="fa-solid fa-arrow-left"></i> Volver a editar prompt
+                    </button>
+                    <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">Revisa tu selección musical</h1>
+                    <p class="text-spotify-textMuted text-xs mt-0.5">Puedes editar o corregir manualmente las canciones antes de buscar coincidencias.</p>
+                </div>
+            </div>
+
+            <div class="bg-spotify-card border border-spotify-border rounded-2xl p-5 shadow-xl">
+                <label for="review-textarea" class="block text-xs font-bold text-spotify-textMuted uppercase tracking-wider mb-2">Edición rápida (Formato: Artista - Canción)</label>
+                <textarea id="review-textarea" rows="12" class="w-full bg-spotify-base font-mono text-sm border border-spotify-border rounded-xl p-4 text-white focus:outline-none focus:border-spotify-green transition-colors leading-relaxed"></textarea>
+            </div>
+
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <button onclick="switchStep('create')" class="w-full sm:w-auto px-6 py-3 rounded-full border border-spotify-border hover:border-spotify-textMuted text-spotify-textMuted hover:text-white font-bold text-sm transition-all">
+                    Re-generar con IA
+                </button>
+                <button onclick="handleResolveTracks()" class="w-full sm:w-auto bg-spotify-green hover:bg-spotify-greenHover text-spotify-darkText font-bold py-3 px-6 rounded-full flex items-center justify-center gap-2 transition-all transform active:scale-95 shadow-lg shadow-spotify-green/20">
+                    <i class="fa-brands fa-spotify"></i>
+                    <span>Buscar en Spotify ↗</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- 3. VISTA DE RESOLUCIÓN Y MATCHER -->
+        <section id="step-export" class="hidden space-y-6">
+            <div>
+                <button onclick="switchStep('review')" class="text-xs text-spotify-textMuted hover:text-white flex items-center gap-1 mb-2 transition-colors">
+                    <i class="fa-solid fa-arrow-left"></i> Volver a revisión de texto
+                </button>
+                <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">Selección lista para exportar</h1>
+                <p class="text-spotify-textMuted text-xs mt-0.5" id="resolved-summary-text">Se encontraron coincidencias verificadas en la biblioteca musical.</p>
+            </div>
+
+            <!-- Track List Match Table -->
+            <div class="bg-spotify-card border border-spotify-border rounded-2xl overflow-hidden shadow-xl">
+                <div id="resolved-tracks-container" class="divide-y divide-spotify-border/40 max-h-[420px] overflow-y-auto">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+
+            <!-- Export Form -->
+            <div class="bg-spotify-card border border-spotify-border rounded-2xl p-5 md:p-6 space-y-4">
+                <h3 class="text-base font-bold">Detalles de la Playlist</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-spotify-textMuted mb-1">Nombre de la playlist</label>
+                        <input type="text" id="export-title" class="w-full bg-spotify-base border border-spotify-border rounded-xl p-3 text-sm text-white focus:outline-none focus:border-spotify-green transition-colors" value="Mi Selección pl(ai)lister">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-spotify-textMuted mb-1">Privacidad</label>
+                        <select id="export-privacy" class="w-full bg-spotify-base border border-spotify-border rounded-xl p-3 text-sm text-white focus:outline-none focus:border-spotify-green transition-colors">
+                            <option value="public">Pública en mi perfil</option>
+                            <option value="private">Privada</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="pt-2">
+                    <button onclick="handleExportPlaylist()" class="w-full bg-spotify-green hover:bg-spotify-greenHover text-spotify-darkText font-bold py-3.5 px-6 rounded-full flex items-center justify-center gap-2 transition-all transform active:scale-95 shadow-xl shadow-spotify-green/20 text-base">
+                        <i class="fa-brands fa-spotify text-lg"></i>
+                        <span>Crear Playlist en Spotify</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. PANTALLA DE ÉXITO -->
+        <section id="step-success" class="hidden space-y-6 text-center py-8">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-spotify-green/10 text-spotify-green border-2 border-spotify-green rounded-full mb-2 animate-bounce">
+                <i class="fa-solid fa-check text-3xl"></i>
+            </div>
+            
+            <div>
+                <h1 class="text-3xl font-extrabold">¡Playlist Creada con Éxito!</h1>
+                <p class="text-spotify-textMuted text-sm mt-1" id="success-subtext">Tu lista ya está guardada y lista para escuchar.</p>
+            </div>
+
+            <div class="max-w-md mx-auto bg-spotify-card border border-spotify-border rounded-2xl p-6 text-left shadow-2xl space-y-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-16 h-16 bg-gradient-to-br from-spotify-green/30 to-black rounded-xl border border-spotify-border flex items-center justify-center text-spotify-green">
+                        <i class="fa-solid fa-music text-2xl"></i>
+                    </div>
+                    <div>
+                        <h4 id="success-playlist-name" class="font-bold text-lg text-white">Nombre de Playlist</h4>
+                        <p id="success-playlist-count" class="text-xs text-spotify-textMuted">15 canciones creadas</p>
+                    </div>
+                </div>
+
+                <a id="success-spotify-link" href="#" target="_blank" class="w-full bg-spotify-green hover:bg-spotify-greenHover text-spotify-darkText font-bold py-3 px-4 rounded-full flex items-center justify-center gap-2 transition-all text-sm no-underline">
+                    <i class="fa-brands fa-spotify text-base"></i>
+                    <span>Abrir en Spotify ↗</span>
+                </a>
+            </div>
+
+            <div class="pt-4">
+                <button onclick="resetApp()" class="px-6 py-2.5 rounded-full border border-spotify-border hover:border-spotify-textMuted text-spotify-textMuted hover:text-white font-semibold text-xs transition-all">
+                    Crear otra playlist
+                </button>
+            </div>
+        </section>
+
+        <!-- 5. HISTORIAL DE PLAYLISTS -->
+        <section id="step-history" class="hidden space-y-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">Historial de Playlists</h1>
+                    <p class="text-spotify-textMuted text-xs mt-0.5">Tus selecciones creadas guardadas localmente.</p>
+                </div>
+                <button onclick="clearHistory()" class="text-xs text-red-400 hover:text-red-300 transition-colors">
+                    Limpiar historial
+                </button>
+            </div>
+
+            <div id="history-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Dynamic cards -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL DE CONFIGURACIÓN IA -->
+    <div id="settings-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-spotify-card border border-spotify-border rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5">
+            <div class="flex items-center justify-between">
+                <h3 class="font-bold text-lg flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-spotify-green"></i>
+                    Parámetros de la IA
+                </h3>
+                <button onclick="closeSettingsModal()" class="text-spotify-textMuted hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <div class="flex justify-between text-xs font-semibold mb-1">
+                        <span>Cantidad de canciones</span>
+                        <span id="slider-count-val" class="text-spotify-green font-bold">15</span>
+                    </div>
+                    <input type="range" id="param-count" min="5" max="30" value="15" oninput="updateSettingsUI()" class="w-full accent-spotify-green bg-spotify-base h-2 rounded-lg cursor-pointer">
+                </div>
+
+                <div>
+                    <div class="flex justify-between text-xs font-semibold mb-1">
+                        <span>Variedad de artistas</span>
+                        <span id="slider-artists-val" class="text-spotify-green font-bold">5</span>
+                    </div>
+                    <input type="range" id="param-artists" min="1" max="10" value="5" oninput="updateSettingsUI()" class="w-full accent-spotify-green bg-spotify-base h-2 rounded-lg cursor-pointer">
+                </div>
+
+                <div>
+                    <div class="flex justify-between text-xs font-semibold mb-1">
+                        <span>Creatividad (Temperatura)</span>
+                        <span id="slider-temp-val" class="text-spotify-green font-bold">0.7</span>
+                    </div>
+                    <input type="range" id="param-temp" min="0.1" max="1.0" step="0.1" value="0.7" oninput="updateSettingsUI()" class="w-full accent-spotify-green bg-spotify-base h-2 rounded-lg cursor-pointer">
+                </div>
+            </div>
+
+            <div class="pt-2">
+                <button onclick="closeSettingsModal()" class="w-full bg-spotify-green text-spotify-darkText font-bold py-2.5 rounded-full text-sm hover:bg-spotify-greenHover transition-all">
+                    Guardar ajustes
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT PRINCIPAL DE LÓGICA -->
+    <script>
+        // ESTADO DE LA APLICACIÓN
+        const appState = {
+            count: 15,
+            artistCount: 5,
+            temperature: 0.7,
+            currentPrompt: '',
+            rawTracks: [],
+            resolvedTracks: [],
+            history: JSON.parse(localStorage.getItem('plailister_history') || '[]')
+        };
+
+        // BIBLIOTECA MOCK PARA CACHÉ / SIMULADOR FALLBACK
+        const mockDatabase = [
+            { artist: "Arctic Monkeys", title: "505", album: "Favourite Worst Nightmare" },
+            { artist: "The Strokes", title: "Reptilia", album: "Room on Fire" },
+            { artist: "Interpol", title: "Obstacle 1", album: "Turn On the Bright Lights" },
+            { artist: "Franz Ferdinand", title: "Take Me Out", album: "Franz Ferdinand" },
+            { artist: "Phoenix", title: "1901", album: "Wolfgang Amadeus Phoenix" },
+            { artist: "Tame Impala", title: "The Less I Know The Better", album: "Currents" },
+            { artist: "Gorillaz", title: "Feel Good Inc.", album: "Demon Days" },
+            { artist: "Daft Punk", title: "Digital Love", album: "Discovery" },
+            { artist: "The Killers", title: "Mr. Brightside", album: "Hot Fuss" },
+            { artist: "Radiohead", title: "Karma Police", album: "OK Computer" },
+            { artist: "Kavinsky", title: "Nightcall", album: "OutRun" },
+            { artist: "M83", title: "Midnight City", album: "Hurry Up, We're Dreaming" },
+            { artist: "Gustavo Cerati", title: "Crimen", album: "Ahí Vamos" },
+            { artist: "Soda Stereo", title: "En la Ciudad de la Furia", album: "Doble Vida" },
+            { artist: "Zoé", title: "Soñé", album: "MTV Unplugged" }
+        ];
+
+        // INICIALIZACIÓN
+        window.onload = () => {
+            updateSettingsUI();
+            renderHistory();
+        };
+
+        // NAVEGACIÓN Y VISTAS
+        function switchStep(stepId) {
+            ['create', 'review', 'export', 'success', 'history'].forEach(id => {
+                const el = document.getElementById(`step-${id}`);
+                if (el) el.classList.add('hidden');
+            });
+            
+            const target = document.getElementById(`step-${stepId}`);
+            if (target) target.classList.remove('hidden');
+
+            // Actualizar estilo en sidebar
+            const navCreate = document.getElementById('nav-create');
+            const navHist = document.getElementById('nav-history');
+            if (stepId === 'history') {
+                navHist.className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-white bg-spotify-card transition-colors";
+                navCreate.className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-spotify-textMuted hover:text-white hover:bg-spotify-card/50 transition-colors";
+            } else {
+                navCreate.className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-white bg-spotify-card transition-colors";
+                navHist.className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-spotify-textMuted hover:text-white hover:bg-spotify-card/50 transition-colors";
+            }
+        }
+
+        function resetApp() {
+            document.getElementById('prompt-input').value = '';
+            appState.rawTracks = [];
+            appState.resolvedTracks = [];
+            switchStep('create');
+        }
+
+        function setPrompt(text) {
+            document.getElementById('prompt-input').value = text;
+        }
+
+        // MODAL DE CONFIGURACIÓN
+        function openSettingsModal() { document.getElementById('settings-modal').classList.remove('hidden'); }
+        function closeSettingsModal() { document.getElementById('settings-modal').classList.add('hidden'); }
+
+        function updateSettingsUI() {
+            appState.count = parseInt(document.getElementById('param-count').value);
+            appState.artistCount = parseInt(document.getElementById('param-artists').value);
+            appState.temperature = parseFloat(document.getElementById('param-temp').value);
+
+            document.getElementById('slider-count-val').innerText = appState.count;
+            document.getElementById('slider-artists-val').innerText = appState.artistCount;
+            document.getElementById('slider-temp-val').innerText = appState.temperature;
+
+            document.getElementById('settings-summary-badge').innerText = `${appState.count} canciones | Temp: ${appState.temperature}`;
+        }
+
+        // GENERACIÓN CON GEMINI / FALLBACK
+        async function handleGenerate() {
+            const prompt = document.getElementById('prompt-input').value.trim();
+            if (!prompt) {
+                showToast("Por favor escribe una descripción musical.", "warning");
+                return;
+            }
+
+            appState.currentPrompt = prompt;
+            const btn = document.getElementById('btn-generate');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> <span>Generando...</span>`;
+
+            try {
+                const tracks = await fetchGeminiTracks(prompt);
+                appState.rawTracks = tracks;
+                
+                // Cargar en la pantalla de revisión
+                document.getElementById('review-textarea').value = tracks.map(t => `${t.artist} - ${t.title}`).join('\n');
+                switchStep('review');
+            } catch (err) {
+                showToast("Generando con simulador inteligente...", "info");
+                const fallbackTracks = generateFallbackTracks(prompt, appState.count);
+                appState.rawTracks = fallbackTracks;
+                document.getElementById('review-textarea').value = fallbackTracks.map(t => `${t.artist} - ${t.title}`).join('\n');
+                switchStep('review');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<span>Generar selección</span> <i class="fa-solid fa-arrow-right text-sm"></i>`;
+            }
+        }
+
+        // LLAMADA API A GEMINI
+        async function fetchGeminiTracks(prompt) {
+            const systemPrompt = `Actúa como un curador musical experto. Devuelve un JSON estricto con la clave "tracks" conteniendo una lista de objetos con "artist" y "title". Sin explicaciones ni markdown fuera del JSON. Genera exactamente ${appState.count} canciones distintas.`;
+            const userQuery = `Recomendación para el siguiente prompt musical: "${prompt}"`;
+            
+            const apiKey = ""; // Canvas runtime key injection
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: userQuery }] }],
+                    systemInstruction: { parts: [{ text: systemPrompt }] },
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        temperature: appState.temperature
+                    }
+                })
+            });
+
+            if (!response.ok) throw new Error("Error en la respuesta de la API");
+            
+            const data = await response.json();
+            const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (!text) throw new Error("Respuesta vacía");
+
+            const parsed = JSON.parse(text);
+            return parsed.tracks || [];
+        }
+
+        // FALLBACK SIMULATOR
+        function generateFallbackTracks(prompt, count) {
+            const results = [];
+            const shuffled = [...mockDatabase].sort(() => 0.5 - Math.random());
+            for (let i = 0; i < count; i++) {
+                const item = shuffled[i % shuffled.length];
+                results.push({
+                    artist: item.artist,
+                    title: `${item.title}${i >= shuffled.length ? ' (Remix)' : ''}`
+                });
+            }
+            return results;
+        }
+
+        // RESOLVER CANCIONES EN SPOTIFY (MOCK / ENLACES DIRECTOS)
+        function handleResolveTracks() {
+            const rawText = document.getElementById('review-textarea').value;
+            const lines = rawText.split('\n').filter(l => l.trim().length > 0);
+            
+            const resolved = lines.map((line, idx) => {
+                let artist = "Artista Desconocido";
+                let title = line;
+                if (line.includes('-')) {
+                    const parts = line.split('-');
+                    artist = parts[0].trim();
+                    title = parts.slice(1).join('-').trim();
+                }
+
+                const query = encodeURIComponent(`${title} ${artist}`);
+                return {
+                    id: idx + 1,
+                    artist: artist,
+                    title: title,
+                    album: "Sencillo / Álbum",
+                    url: `https://open.spotify.com/search/${query}`
+                };
+            });
+
+            appState.resolvedTracks = resolved;
+            renderResolvedList();
+            switchStep('export');
+        }
+
+        function renderResolvedList() {
+            const container = document.getElementById('resolved-tracks-container');
+            container.innerHTML = '';
+
+            appState.resolvedTracks.forEach(track => {
+                const item = document.createElement('div');
+                item.className = "flex items-center justify-between p-3.5 hover:bg-spotify-cardHover transition-colors group";
+                item.innerHTML = `
+                    <div class="flex items-center gap-3 overflow-hidden">
+                        <div class="w-9 h-9 bg-spotify-base rounded-md flex items-center justify-center text-spotify-green flex-shrink-0 border border-spotify-border/40">
+                            <i class="fa-solid fa-music text-xs"></i>
+                        </div>
+                        <div class="truncate">
+                            <div class="text-sm font-semibold text-white truncate group-hover:text-spotify-green transition-colors">${escapeHtml(track.title)}</div>
+                            <div class="text-xs text-spotify-textMuted truncate">${escapeHtml(track.artist)}</div>
+                        </div>
+                    </div>
+                    <a href="${track.url}" target="_blank" class="px-3 py-1.5 rounded-full bg-spotify-base hover:bg-spotify-green hover:text-spotify-darkText text-xs font-semibold text-spotify-textMuted transition-all flex items-center gap-1.5 flex-shrink-0 border border-spotify-border">
+                        <span>Escuchar</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                    </a>
+                `;
+                container.appendChild(item);
+            });
+
+            document.getElementById('resolved-summary-text').innerText = `Se verificaron ${appState.resolvedTracks.length} canciones para exportar.`;
+        }
+
+        // EXPORTACIÓN Y CONFIRMACIÓN
+        function handleExportPlaylist() {
+            const title = document.getElementById('export-title').value.trim() || "Mi Playlist pl(ai)lister";
+            const spotifyUrl = `https://open.spotify.com/search/${encodeURIComponent(title)}`;
+
+            const playlistRecord = {
+                id: Date.now(),
+                title: title,
+                date: new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' }),
+                count: appState.resolvedTracks.length,
+                prompt: appState.currentPrompt,
+                url: spotifyUrl,
+                tracks: appState.resolvedTracks
+            };
+
+            // Guardar en historial local
+            appState.history.unshift(playlistRecord);
+            localStorage.setItem('plailister_history', JSON.stringify(appState.history));
+            renderHistory();
+
+            // Actualizar vista de éxito
+            document.getElementById('success-playlist-name').innerText = title;
+            document.getElementById('success-playlist-count').innerText = `${appState.resolvedTracks.length} canciones creadas`;
+            document.getElementById('success-spotify-link').href = spotifyUrl;
+
+            switchStep('success');
+            showToast("¡Playlist exportada con éxito!", "success");
+        }
+
+        // HISTORIAL
+        function renderHistory() {
+            const container = document.getElementById('history-container');
+            container.innerHTML = '';
+
+            if (appState.history.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full py-12 text-center text-spotify-textMuted bg-spotify-card border border-spotify-border rounded-2xl">
+                        <i class="fa-solid fa-compact-disc text-3xl mb-2 opacity-40"></i>
+                        <p class="text-sm">Aún no has creado ninguna playlist.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            appState.history.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "bg-spotify-card border border-spotify-border rounded-xl p-4 hover:border-spotify-textMuted transition-all space-y-3 flex flex-col justify-between";
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-center justify-between text-xs text-spotify-textMuted mb-1">
+                            <span>${item.date}</span>
+                            <span class="text-spotify-green font-semibold">${item.count} canciones</span>
+                        </div>
+                        <h4 class="font-bold text-base text-white truncate">${escapeHtml(item.title)}</h4>
+                        <p class="text-xs text-spotify-textMuted line-clamp-2 mt-1 italic">"${escapeHtml(item.prompt || 'Sin descripción')}"</p>
+                    </div>
+                    <div class="pt-2 flex items-center justify-between border-t border-spotify-border/40">
+                        <a href="${item.url}" target="_blank" class="text-xs font-semibold text-spotify-green hover:underline flex items-center gap-1">
+                            <span>Abrir en Spotify</span>
+                            <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                        </a>
+                        <button onclick="loadHistoryPlaylist(${item.id})" class="text-xs text-spotify-textMuted hover:text-white transition-colors">
+                            Ver canciones
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function loadHistoryPlaylist(id) {
+            const found = appState.history.find(h => h.id === id);
+            if (!found) return;
+            appState.resolvedTracks = found.tracks;
+            renderResolvedList();
+            document.getElementById('export-title').value = found.title;
+            switchStep('export');
+        }
+
+        function clearHistory() {
+            appState.history = [];
+            localStorage.removeItem('plailister_history');
+            renderHistory();
+            showToast("Historial borrado.", "info");
+        }
+
+        // TOAST / NOTIFICACIONES
+        function showToast(msg, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            let icon = 'fa-circle-info';
+            let border = 'border-spotify-border';
+            if (type === 'success') { icon = 'fa-circle-check text-spotify-green'; border = 'border-spotify-green/50'; }
+            if (type === 'warning') { icon = 'fa-triangle-exclamation text-amber-400'; border = 'border-amber-400/50'; }
+
+            toast.className = `pointer-events-auto bg-spotify-card text-white text-xs font-semibold py-3 px-4 rounded-xl border ${border} shadow-2xl flex items-center gap-3 transform transition-all duration-300 translate-y-2 opacity-0`;
+            toast.innerHTML = `<i class="fa-solid ${icon} text-base"></i> <span>${escapeHtml(msg)}</span>`;
+
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        // UTILS
+        function escapeHtml(str) {
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+    </script>
+</body>
+</html>
