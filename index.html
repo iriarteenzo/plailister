@@ -85,79 +85,49 @@
 
 <body class="h-screen flex overflow-hidden bg-black text-white select-none">
 
-    <!-- BARRA LATERAL -->
-    <aside class="w-64 bg-black flex flex-col p-2 gap-2 shrink-0 h-full">
-
-        <!-- NAVEGACIÓN PRINCIPAL -->
-        <div class="bg-spotify-dark rounded-lg p-4 flex flex-col gap-4">
-
-            <!-- Nombre de la aplicación sin logo de Spotify -->
-            <div class="flex items-center text-xl font-bold tracking-tight">
-                <span>
-                    pl<span class="w-5 h-5 border border-spotify-green rounded-full inline-flex items-center justify-center text-spotify-green text-[10px] font-bold">ai</span>lister
-                </span>
-            </div>
-
-            <nav class="flex flex-col gap-3 pt-2 text-sm font-medium">
-
-                <button
-                    onclick="switchTab('create')"
-                    id="nav-create"
-                    class="flex items-center gap-4 text-white hover:text-white transition duration-200"
-                >
-                    <i class="fa-solid fa-compass text-lg text-spotify-green"></i>
-                    <span>Descubrir / Crear</span>
-                </button>
-
-                <button
-                    onclick="switchTab('history')"
-                    id="nav-history"
-                    class="flex items-center gap-4 text-spotify-gray hover:text-white transition duration-200"
-                >
-                    <i class="fa-solid fa-list-ul text-lg"></i>
-                    <span>Mis Playlists</span>
-                </button>
-
-            </nav>
+<!-- BARRA LATERAL RESPONSIVA -->
+<aside class="w-20 md:w-64 bg-black flex flex-col p-2 gap-2 shrink-0 h-full">
+    <!-- Contenido adaptable -->
+    <div class="bg-spotify-dark rounded-lg p-3 md:p-4 flex flex-col gap-4">
+        <div class="flex items-center text-xl font-bold tracking-tight">
+            <span class="hidden md:inline">
+                pl<span class="w-5 h-5 border border-spotify-green rounded-full inline-flex items-center justify-center text-spotify-green text-[10px] font-bold">ai</span>lister
+            </span>
+            <span class="md:hidden text-center w-full">
+                pl<span class="text-spotify-green">ai</span>
+            </span>
         </div>
-
-        <!-- PANEL DE CONEXIÓN SPOTIFY -->
-        <!-- Se elimina el bloque Tu Biblioteca -->
-        <div class="bg-spotify-dark rounded-lg p-4 flex-1 flex flex-col justify-end overflow-hidden">
-
-            <div class="pt-3 border-t border-neutral-800">
-
-                <div id="spotifyConnectionBox" class="bg-neutral-900/80 border border-neutral-800 rounded-lg p-3 flex flex-col gap-3">
-
-                    <div class="flex items-center gap-2.5 overflow-hidden">
-                        <div
-                            id="spotifyStatusDot"
-                            class="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0"
-                        ></div>
-
-                        <div class="truncate">
-                            <p id="spotifyStatusText" class="text-xs font-semibold truncate text-neutral-300">
-                                Desconectado
-                            </p>
-                            <p id="spotifyUserText" class="text-[10px] text-neutral-500 truncate">
-                                Spotify OAuth
-                            </p>
-                        </div>
+        <nav class="flex flex-col gap-3 pt-2 text-sm font-medium">
+            <button onclick="switchTab('create')" class="flex items-center gap-4 text-white hover:text-white transition duration-200">
+                <i class="fa-solid fa-compass text-lg text-spotify-green"></i>
+                <span class="hidden md:inline">Descubrir / Crear</span>
+            </button>
+            <button onclick="switchTab('history')" class="flex items-center gap-4 text-spotify-gray hover:text-white transition duration-200">
+                <i class="fa-solid fa-list-ul text-lg"></i>
+                <span class="hidden md:inline">Mis Playlists</span>
+            </button>
+        </nav>
+    </div>
+    <!-- Resto del panel lateral inferior -->
+    <div class="bg-spotify-dark rounded-lg p-3 md:p-4 flex-1 flex flex-col justify-end overflow-hidden">
+        <div class="pt-3 border-t border-neutral-800">
+            <div id="spotifyConnectionBox" class="bg-neutral-900/80 border border-neutral-800 rounded-lg p-2 md:p-3 flex flex-col gap-3">
+                <div class="flex items-center gap-2.5 overflow-hidden">
+                    <div id="spotifyStatusDot" class="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0"></div>
+                    <div class="hidden md:block truncate">
+                        <p id="spotifyStatusText" class="text-xs font-semibold truncate text-neutral-300">Desconectado</p>
+                        <p id="spotifyUserText" class="text-[10px] text-neutral-500 truncate">Spotify OAuth</p>
                     </div>
-
-                    <button
-                        onclick="toggleSpotifyConnect()"
-                        id="btnSpotifyConnect"
-                        class="w-full min-h-10 text-sm font-semibold bg-spotify-green text-black px-4 py-2.5 rounded-full hover:bg-spotify-greenHover transition flex items-center justify-center gap-2"
-                    >
-                        <span>Conectar con Spotify</span>
-                        <i class="fa-brands fa-spotify text-lg" aria-hidden="true"></i>
-                    </button>
-
                 </div>
+                <button onclick="toggleSpotifyConnect()" id="btnSpotifyConnect" class="w-full min-h-10 text-xs md:text-sm font-semibold bg-spotify-green text-black px-2 md:px-4 py-2.5 rounded-full hover:bg-spotify-greenHover transition flex items-center justify-center gap-2">
+                    <span class="hidden md:inline">Conectar con Spotify</span>
+                    <i class="fa-brands fa-spotify text-lg" aria-hidden="true"></i>
+                </button>
             </div>
         </div>
-    </aside>
+    </div>
+</aside>
+
 
     <!-- ÁREA PRINCIPAL -->
     <main class="flex-1 bg-spotify-dark m-2 ml-0 rounded-lg flex flex-col overflow-hidden relative">
