@@ -41,7 +41,7 @@ SPOTIFY_REDIRECT_URI = get_secret(
 ).rstrip("/")
 
 # =========================================================
-# DISEÑO CSS
+# DESIGN SYSTEM
 # =========================================================
 
 st.markdown("""
@@ -58,6 +58,7 @@ st.markdown("""
     --green: #1ED760;
     --green-hover: #3BE477;
     --green-text: #07150B;
+
     --font: "Google Sans", Arial, sans-serif;
     --radius: 16px;
     --radius-pill: 999px;
@@ -66,67 +67,426 @@ st.markdown("""
 
 html, body, [class*="css"], .stApp {
     font-family: var(--font) !important;
+}
+
+.stApp {
     background: var(--bg);
     color: var(--text);
 }
 
-header[data-testid="stHeader"] { background: transparent; }
-#MainMenu, footer { visibility: hidden; }
+header[data-testid="stHeader"] {
+    background: transparent;
+}
+
+#MainMenu, footer {
+    visibility: hidden;
+}
 
 .block-container {
     max-width: 880px;
     padding: 28px 28px 32px !important;
 }
 
-h1 { font-size: clamp(30px, 4vw, 40px) !important; font-weight: 600 !important; }
-.muted { color: var(--muted); font-size: 14px; }
-.eyebrow { color: var(--green); font-size: 11px; font-weight: 700; letter-spacing: 1.3px; text-transform: uppercase; margin-bottom: 10px; }
+/* Tipografía */
+
+h1, h2, h3, p, label, input, textarea, button {
+    font-family: var(--font) !important;
+}
+
+h1 {
+    color: var(--text) !important;
+    font-size: clamp(30px, 4vw, 40px) !important;
+    font-weight: 600 !important;
+    line-height: 1.15 !important;
+    letter-spacing: -1px !important;
+    margin-bottom: 12px !important;
+}
+
+h2 {
+    color: var(--text) !important;
+    font-size: 24px !important;
+    font-weight: 600 !important;
+    letter-spacing: -.4px !important;
+}
+
+h3 {
+    color: var(--text) !important;
+    font-size: 18px !important;
+    font-weight: 600 !important;
+}
+
+p {
+    line-height: 1.6;
+}
+
+.muted {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.eyebrow {
+    color: var(--green);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.3px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+}
+
+/* Marca */
 
 .brand {
-    display: flex; align-items: center; gap: 4px; margin-bottom: 28px;
-    color: var(--text); font-size: 26px; font-weight: 700; letter-spacing: -1.2px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 28px;
+    color: var(--text);
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -1.2px;
+    line-height: 1.2;
 }
+
 .brand-ai {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 24px; height: 24px; border: 2px solid var(--green); border-radius: 50%;
-    color: var(--green); font-size: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border: 2px solid var(--green);
+    border-radius: 50%;
+    color: var(--green);
+    font-size: 10px;
+    letter-spacing: -.3px;
 }
+
+/* Barra lateral */
 
 section[data-testid="stSidebar"] {
     background: #090909;
     border-right: 1px solid #292929;
 }
-section[data-testid="stSidebar"] > div { padding: 24px 18px; }
 
-.stButton > button, .stLinkButton > a, div[data-testid="stFormSubmitButton"] button {
-    display: flex; align-items: center; justify-content: center;
-    min-height: var(--control-height) !important; height: var(--control-height);
-    padding: 0 18px !important; border: 1px solid var(--border) !important;
-    border-radius: var(--radius-pill) !important; background: var(--surface-hover) !important;
-    color: var(--text) !important; font-weight: 600 !important; text-decoration: none !important;
-}
-.stButton > button[kind="primary"], div[data-testid="stFormSubmitButton"] button {
-    background: var(--green) !important; border-color: var(--green) !important; color: var(--green-text) !important;
+section[data-testid="stSidebar"] > div {
+    padding: 24px 18px;
 }
 
-div[data-testid="stTextArea"] textarea {
-    background: var(--surface) !important; color: var(--text) !important;
-    border: 1px solid var(--border) !important; border-radius: 12px !important; padding: 14px !important;
+section[data-testid="stSidebar"] p,
+section[data-testid="stSidebar"] label,
+section[data-testid="stSidebar"] .stMarkdown,
+section[data-testid="stSidebar"] [data-testid="stCaptionContainer"] {
+    color: rgba(255,255,255,.9) !important;
 }
-div[data-testid="stTextArea"] label { display: none !important; }
+
+section[data-testid="stSidebar"] hr {
+    border-color: #303030;
+    margin: 20px 0;
+}
+
+.sidebar-label {
+    color: rgba(255,255,255,.65);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+}
+
+/* Botones */
+
+.stButton > button,
+.stLinkButton > a,
+div[data-testid="stFormSubmitButton"] button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--control-height) !important;
+    height: var(--control-height);
+    padding: 0 18px !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius-pill) !important;
+    background: var(--surface-hover) !important;
+    color: var(--text) !important;
+    font-family: var(--font) !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    text-decoration: none !important;
+    box-shadow: none !important;
+    transition: background .15s ease, border-color .15s ease;
+}
+
+.stButton > button:hover,
+.stLinkButton > a:hover {
+    background: #353535 !important;
+    border-color: #555 !important;
+    color: #fff !important;
+}
+
+.stButton > button[kind="primary"],
+div[data-testid="stFormSubmitButton"] button,
+.stLinkButton > a[kind="primary"] {
+    background: var(--green) !important;
+    border-color: var(--green) !important;
+    color: var(--green-text) !important;
+}
+
+.stButton > button[kind="primary"]:hover,
+div[data-testid="stFormSubmitButton"] button:hover,
+.stLinkButton > a[kind="primary"]:hover {
+    background: var(--green-hover) !important;
+    border-color: var(--green-hover) !important;
+    color: var(--green-text) !important;
+}
+
+.stButton > button:focus-visible,
+.stLinkButton > a:focus-visible {
+    outline: 2px solid var(--green) !important;
+    outline-offset: 3px !important;
+}
+
+/* Campos */
+
+div[data-testid="stTextArea"] textarea,
+div[data-testid="stTextInput"] input {
+    background: var(--surface) !important;
+    color: var(--text) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 12px !important;
+    font-family: var(--font) !important;
+    font-size: 14px !important;
+    line-height: 1.6 !important;
+    padding: 14px 16px !important;
+    box-shadow: none !important;
+}
+
+div[data-testid="stTextArea"] textarea:focus,
+div[data-testid="stTextInput"] input:focus {
+    border-color: #777 !important;
+    box-shadow: 0 0 0 1px #777 !important;
+}
+
+textarea::placeholder,
+input::placeholder {
+    color: #999 !important;
+    opacity: 1 !important;
+}
+
+/* Ocultar etiquetas flotantes duplicadas en text_area para evitar elementos fantasma */
+div[data-testid="stTextArea"] label {
+    display: none !important;
+}
+
+div[data-testid="stTextInput"] label {
+    color: var(--text) !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    margin-bottom: 8px !important;
+}
+
+/* Composer */
 
 .composer {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 20px; padding: 18px; margin: 24px 0 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 18px;
+    margin: 24px 0 16px;
 }
+
+.st-key-prompt_input textarea {
+    min-height: 120px !important;
+    background: transparent !important;
+    border: 0 !important;
+    padding: 8px 2px !important;
+    font-size: 15px !important;
+}
+
+.st-key-prompt_input textarea:focus {
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+.st-key-prompt_input [data-baseweb="textarea"] {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+.st-key-adjust_button button,
+.st-key-generate_button button {
+    width: 100% !important;
+    min-height: 46px !important;
+    height: 46px !important;
+}
+
+/* Slider */
+
+div[data-testid="stSlider"] [role="slider"] {
+    background: var(--green) !important;
+    border-color: var(--green) !important;
+}
+
+.slider-labels {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    margin: -4px 0 16px;
+}
+
+.slider-side {
+    color: var(--muted);
+    flex: 1;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.slider-side strong {
+    display: block;
+    color: var(--text);
+    font-size: 11px;
+    letter-spacing: .6px;
+    margin-bottom: 3px;
+}
+
+.slider-side:last-child {
+    text-align: right;
+}
+
+/* Modal */
+
+div[data-testid="stDialog"] > div,
+div[role="dialog"] {
+    background: #181818 !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 20px !important;
+}
+
+/* Canciones */
+
 .track-row {
-    display: flex; align-items: center; gap: 14px; padding: 14px 4px; border-bottom: 1px solid #303030;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 4px;
+    border-bottom: 1px solid #303030;
 }
+
+.track-index {
+    width: 24px;
+    flex-shrink: 0;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.track-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.track-title {
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.45;
+}
+
+.track-artist {
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 3px;
+}
+
+.track-album {
+    color: #888;
+    font-size: 11px;
+    margin-top: 3px;
+}
+
+.track-link {
+    color: var(--green);
+    font-size: 12px;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
 .result-card {
-    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; margin: 16px 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px;
+    margin: 16px 0;
+}
+
+hr {
+    border-color: #303030;
+}
+
+/* Adaptación móvil */
+
+@media (max-width: 760px) {
+    .block-container {
+        padding: 20px 16px 28px !important;
+    }
+
+    .brand {
+        margin-bottom: 22px;
+    }
+
+    .composer {
+        padding: 14px;
+        border-radius: 16px;
+        margin-top: 20px;
+    }
+
+    h1 {
+        font-size: 31px !important;
+    }
 }
 </style>
 """, unsafe_allow_html=True)
+
+
+# =========================================================
+# ICONOS
+# =========================================================
+
+ICONS = {
+    "external": (
+        '<path d="M15 3h6v6"/>'
+        '<path d="M10 14 21 3"/>'
+        '<path d="M19 13v6a2 2 0 0 1-2 2H5'
+        'a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h6"/>'
+    ),
+    "check": '<path d="m5 12 4 4L19 6"/>',
+    "spotify": (
+        '<circle cx="12" cy="12" r="10" fill="#1ED760" stroke="none"/>'
+        '<path d="M6.5 9.2c3.9-1.2 8.5-.8 11.2 1" '
+        'stroke="#07150B" stroke-width="1.7"/>'
+        '<path d="M7.2 12.2c3.2-1 7-.6 9.4 1" '
+        'stroke="#07150B" stroke-width="1.5"/>'
+        '<path d="M7.8 15c2.7-.7 5.5-.4 7.5.8" '
+        'stroke="#07150B" stroke-width="1.4"/>'
+    ),
+}
+
+
+def icon(name, size=18):
+    return (
+        f'<svg width="{size}" height="{size}" viewBox="0 0 24 24" '
+        'fill="none" stroke="currentColor" stroke-width="1.7" '
+        'stroke-linecap="round" stroke-linejoin="round" '
+        'aria-hidden="true">'
+        f'{ICONS[name]}</svg>'
+    )
+
+
+def brand():
+    st.markdown(
+        '<div class="brand">pl'
+        '<span class="brand-ai">ai</span>lister</div>',
+        unsafe_allow_html=True,
+    )
 
 # =========================================================
 # FUNCIONES DE APOYO Y SPOTIFY
