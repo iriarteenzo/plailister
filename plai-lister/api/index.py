@@ -5,6 +5,13 @@ from google import genai
 from google.genai import types
 
 class handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        # Permite verificar que la ruta de la API está viva
+        self.send_response(200)
+        self.send_header('Content-type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps({"status": "API de pl(ai)lister activa"}).encode('utf-8'))
+
     def do_POST(self):
         try:
             content_length = int(self.headers.get('Content-Length', 0))
