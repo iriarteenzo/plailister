@@ -5,15 +5,13 @@ from google import genai
 from google.genai import types
 
 class handler(BaseHTTPRequestHandler):
-    def send_json(self, status_code, data):
-        self.send_response(status_code)
-        self.send_header('Content-Type', 'application/json; charset=utf-8')
-        self.end_headers()
-        payload = json.dumps(data, ensure_ascii=False).encode('utf-8')
-        self.wfile.write(payload)
-
     def do_GET(self):
-        self.send_json(200, {"status": "API de pl(ai)lister activa"})
+        response_data = json.dumps({"status": "API de pl(ai)lister activa"}, ensure_ascii=False).encode('utf-8')
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/json; charset=utf-8')
+        self.send_header('Content-Length', str(len(response_data)))
+        self.end_headers()
+        self.wfile.write(response_data)
 
     def do_POST(self):
         try:
@@ -28,7 +26,12 @@ class handler(BaseHTTPRequestHandler):
 
             api_key = os.environ.get("GEMINI_API_KEY")
             if not api_key:
-                self.send_json(500, {"error": "Falta GEMINI_API_KEY en las variables de entorno de Vercel"})
+                err_data = json.dumps({"error": "Falta GEMINI_API_KEY en las variables de entorno de Vercel"}, ensure_ascii=False).encode('utf-8')
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json; charset=utf-8')
+                self.send_header('Content-Length', str(len(err_data)))
+                self.end_headers()
+                self.wfile.write(err_data)
                 return
 
             client = genai.Client(api_key=api_key)
@@ -49,9 +52,20 @@ No inventes canciones. Evita duplicados. Sin markdown extra.
                 ),
             )
 
-            # Validar e interpretar la respuesta JSON de Gemini antes de enviar
-            result_json = json.loads(response.text)
-            self.send_json(200, result_json)
+            # Validar e interpretar la respuesta JSON de Gemini de forma segura
+            parsed_json = json.loads(response.text)
+            response_data = json.dumps(parsed_json, ensure_ascii=False).encode('utf-8')
+
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json; charset=utf-8')
+            self.send_header('Content-Length', str(len(response_data)))
+            self.end_headers()
+            self.wfile.write(response_data)
 
         except Exception as e:
-            self.send_json(500, {"error": str(e)})
+            err_data = json.dumps({"error": str(e)}, ensure_ascii=False).encode('utf-8')
+            self.send_response(500)
+            self.send_header('Content-Type', 'application/json; charset=utf-8')
+            self.send_header('Content-Length', str(len(err_data)))
+            self.end_headers()
+            self.wfile.write(err_data)
