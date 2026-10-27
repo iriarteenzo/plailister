@@ -21,7 +21,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-DEFAULT_MODEL = "gemini-1.5-flash"
+DEFAULT_MODEL = "gemini-3.8-flash"
 SPOTIFY_SCOPES = "playlist-modify-public playlist-modify-private"
 
 def get_secret(key, default=""):
